@@ -52,6 +52,12 @@
 (ido-mode 1)
 (ido-everywhere 1)
 (flx-ido-mode 1)
+(global-set-key (kbd "C-x g") 'magit-status)
+
+(add-hook 'elpy-mode-hook
+    (lambda ()
+    (local-unset-key (kbd "C-c C-c"))
+    (define-key elpy-mode-map (kbd "<f5>") 'elpy-shell-send-region-or-buffer)))
 ;; disable ido faces to see flx highlights.
 (setq ido-enable-flex-matching t)
 (setq ido-use-faces nil)

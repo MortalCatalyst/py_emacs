@@ -8,7 +8,7 @@ With a few minor customizations added.
 Notable key combos
 C-c C-s provides a project grep from elpy 
 
-C-c C-c run python code with IPython-REPL
+C-c C-v run python code with IPython-REPL
 
 M-x pyvenv-activate
 M-x pyvenv-deactivate
@@ -18,3 +18,9 @@ C-c p p which is projctile switch project
 
 https://www.emacswiki.org/emacs/SwitchingBuffers
 C-x b to switch buffers
+
+Magit get started http://magit.vc/manual/magit.html#Getting-started
+C-t     (magit-popup-toggle-show-common-commands)
+C-x g git status
+C-c C-c
+
