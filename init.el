@@ -26,6 +26,7 @@
     py-autopep8
     rainbow-delimiters
     web-mode
+    flx-ido
     projectile))
 
 (mapc #'(lambda (package)
@@ -46,6 +47,14 @@
 (elpy-enable)
 (elpy-use-ipython)
 (projectile-global-mode)
+(setq projectile-switch-project-action 'projectile-dired)
+(require 'flx-ido)
+(ido-mode 1)
+(ido-everywhere 1)
+(flx-ido-mode 1)
+;; disable ido faces to see flx highlights.
+(setq ido-enable-flex-matching t)
+(setq ido-use-faces nil)
 
 ;; enable rainbow-delimiters
 (require 'rainbow-delimiters)
