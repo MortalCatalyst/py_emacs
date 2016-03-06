@@ -1,3 +1,4 @@
+
 ;; init.el --- Emacs configuration
 
 ;; INSTALL PACKAGES
@@ -18,8 +19,10 @@
     elpy
     js2-mode
     plan9-theme
+    emmet-mode
     leuven-theme
     go-mode
+    org-journal
     magit
     markdown-mode
     pbcopy
@@ -41,8 +44,15 @@
 (setq inhibit-startup-message t) ;; hide the startup message
 (load-theme 'leuven t) ;; load material theme
 (global-linum-mode t) ;; enable line numbers globally
-;; (add-to-list 'org-modules 'org-timer)
+;;(add-to-list 'org-modules 'org-timer)
+(setq org-clock-persist 'history)
+    (org-clock-persistence-insinuate)
+(require 'org-journal)
 
+;;; Emmet
+(require 'emmet-mode)
+(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+(add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
 
 ;; GTD
 ;;---------------------------------------
@@ -51,47 +61,29 @@
    (find-file "/home/sayth/Dropbox/MyOrg/mygtd.org")
    ) ;;; locate my gtd file quickly
 ;;; C-c a h (to view outline of day)
-("H" "Office and Home Lists"
-     ((agenda)
-          (tags-todo "OFFICE")
-          (tags-todo "HOME")
-          (tags-todo "COMPUTER")
-          (tags-todo "STUDY")
-          (tags-todo "READING")))
+;; ("H" "Office and Home Lists"
+;;      ((agenda)
+;;           (tags-todo "OFFICE")
+;;           (tags-todo "HOME")
+;;           (tags-todo "COMPUTER")
+;;           (tags-todo "STUDY")
+;;           (tags-todo "READING")))
 
-("D" "Daily Action List"
-      (
-           (agenda "" ((org-agenda-ndays 1)
-                       (org-agenda-sorting-strategy
-                        (quote ((agenda time-up priority-down tag-up) )))
-                       (org-deadline-warning-days 0)
-                       ))))
+;; ("D" "Daily Action List"
+;;       (
+;;            (agenda "" ((org-agenda-ndays 1)
+;;                        (org-agenda-sorting-strategy
+;;                         (quote ((agenda time-up priority-down tag-up) )))
+;;                        (org-deadline-warning-days 0)
+;;                        ))))
+
 ;;; TODO figure out the task timing/estimation
 
-(defvar org-journal-file "~/Dropbox/MyOrg/journal.org"  
+(defvar org-journal-dir "/home/sayth/Dropbox/MyOrg/"  
   "Path to OrgMode journal file.")  
 (defvar org-journal-date-format "%Y-%m-%d"  
   "Date format string for journal headings.")  
   
-(defun org-journal-entry ()  
-  "Create a new diary entry for today or append to an existing one."  
-  (interactive)  
-  (switch-to-buffer (find-file org-journal-file))  
-  (widen)  
-  (let ((today (format-time-string org-journal-date-format)))  
-    (beginning-of-buffer)  
-    (unless (org-goto-local-search-forward-headings today nil t)  
-      ((lambda ()   
-         (org-insert-heading)  
-         (insert today)  
-         (insert "\n\n  \n"))))  
-    (beginning-of-buffer)  
-    (org-show-entry)  
-    (org-narrow-to-subtree)  
-    (end-of-buffer)  
-    (backward-char 2)  
-    (unless (= (current-column) 2)  
-      (insert "\n\n  "))))  
 
 ;; C-c C-x C-i clock-in
 ;; C-c C-x C-o clock-out
@@ -123,7 +115,7 @@
 
 (add-hook 'elpy-mode-hook
     (lambda ()
-    (local-unset-key (kbd "C-c C-c"))
+;;    (local-unset-key (kbd "C-c C-c"))
     (define-key elpy-mode-map (kbd "<f5>") 'elpy-shell-send-region-or-buffer)))
 ;; disable ido faces to see flx highlights.
 (setq ido-enable-flex-matching t)
@@ -187,7 +179,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
+    (org-gcal web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
