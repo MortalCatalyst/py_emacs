@@ -27,6 +27,7 @@
     rainbow-delimiters
     web-mode
     flx-ido
+    pomodoro
     projectile))
 
 (mapc #'(lambda (package)
@@ -40,6 +41,66 @@
 (setq inhibit-startup-message t) ;; hide the startup message
 (load-theme 'leuven t) ;; load material theme
 (global-linum-mode t) ;; enable line numbers globally
+;; (add-to-list 'org-modules 'org-timer)
+
+
+;; GTD
+;;---------------------------------------
+(defun gtd ()
+   (interactive)
+   (find-file "/home/sayth/Dropbox/MyOrg/mygtd.org")
+   ) ;;; locate my gtd file quickly
+;;; C-c a h (to view outline of day)
+("H" "Office and Home Lists"
+     ((agenda)
+          (tags-todo "OFFICE")
+          (tags-todo "HOME")
+          (tags-todo "COMPUTER")
+          (tags-todo "STUDY")
+          (tags-todo "READING")))
+
+("D" "Daily Action List"
+      (
+           (agenda "" ((org-agenda-ndays 1)
+                       (org-agenda-sorting-strategy
+                        (quote ((agenda time-up priority-down tag-up) )))
+                       (org-deadline-warning-days 0)
+                       ))))
+;;; TODO figure out the task timing/estimation
+
+(defvar org-journal-file "~/Dropbox/MyOrg/journal.org"  
+  "Path to OrgMode journal file.")  
+(defvar org-journal-date-format "%Y-%m-%d"  
+  "Date format string for journal headings.")  
+  
+(defun org-journal-entry ()  
+  "Create a new diary entry for today or append to an existing one."  
+  (interactive)  
+  (switch-to-buffer (find-file org-journal-file))  
+  (widen)  
+  (let ((today (format-time-string org-journal-date-format)))  
+    (beginning-of-buffer)  
+    (unless (org-goto-local-search-forward-headings today nil t)  
+      ((lambda ()   
+         (org-insert-heading)  
+         (insert today)  
+         (insert "\n\n  \n"))))  
+    (beginning-of-buffer)  
+    (org-show-entry)  
+    (org-narrow-to-subtree)  
+    (end-of-buffer)  
+    (backward-char 2)  
+    (unless (= (current-column) 2)  
+      (insert "\n\n  "))))  
+
+;; C-c C-x C-i clock-in
+;; C-c C-x C-o clock-out
+;; C-c C-x C-e modify-effort-estimate
+;; C-c C-x C-j clock-goto
+;; C-c C-x C-t clock-report
+
+(require 'pomodoro) 
+    (pomodoro-add-to-mode-line)
 
 ;;switch panes
 ;; use Shift+arrow_keys to move cursor around split panes
