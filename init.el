@@ -18,8 +18,8 @@
     ein
     elpy
     js2-mode
-    plan9-theme
     emmet-mode
+    smartrep
     leuven-theme
     go-mode
     org-journal
@@ -48,11 +48,22 @@
 (setq org-clock-persist 'history)
     (org-clock-persistence-insinuate)
 (require 'org-journal)
+(require 'smartrep)
 
+(electric-pair-mode 1)
+(setq electric-pair-pairs '(
+                            (?\" . ?\")
+                            (?\{ . ?\})
+                            ) )
 ;;; Emmet
 (require 'emmet-mode)
 (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
 (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+
+(add-hook 'python-mode-hook #'electric-spacing-mode)
+
+(show-paren-mode 1)
+(setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 
 ;; GTD
 ;;---------------------------------------
@@ -225,7 +236,7 @@ Version 2015-12-30"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (org-gcal web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
+    (electric-spacing org-gcal web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
