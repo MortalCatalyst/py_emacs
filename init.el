@@ -155,7 +155,7 @@
 (setq org-track-ordered-property-with-tag t)
 (setq org-agenda-dim-blocked-tasks t)
 
-;;; helm-mini
+;;; helmmini
 (require 'helm)
 (require 'helm-config)
 
@@ -184,7 +184,8 @@
 (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
 (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
 
-(global-set-key (kbd "C-x b") 'helm-mini)
+(global-set-key (kbd "M-x") 'helm-M-x)
+;;(global-set-key (kbd "C-x b") 'helm-mini)
 (setq helm-buffers-fuzzy-matching t
       helm-recentf-fuzzy-match    t)
 
