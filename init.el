@@ -1,4 +1,3 @@
-
 ;; init.el --- Emacs configuration
 
 ;; INSTALL PACKAGES
@@ -29,6 +28,7 @@
     py-autopep8
     rainbow-delimiters
     web-mode
+    helm-projectile
     flx-ido
     pomodoro
     projectile))
@@ -45,9 +45,149 @@
 (load-theme 'leuven t) ;; load material theme
 (global-linum-mode t) ;; enable line numbers globally
 ;;(add-to-list 'org-modules 'org-timer)
+
+;; GTD
+;;---------------------------------------
+
 (setq org-clock-persist 'history)
     (org-clock-persistence-insinuate)
+
+(add-hook 'message-mode-hook 'turn-on-orgtbl)
 (require 'org-journal)
+(setq org-log-done 'time)
+;; (eval-after-load 'org-agenda
+;;   '(bind-key "i" 'org-agenda-clock-in org-agenda-mode-map))
+
+(setq org-use-effective-time t)
+
+(defun my/org-use-speed-commands-for-headings-and-lists ()
+  "Activate speed commands on list items too."
+  (or (and (looking-at org-outline-regexp) (looking-back "^\**"))
+      (save-excursion (and (looking-at (org-item-re)) (looking-back "^[ \t]*")))))
+(setq org-use-speed-commands 'my/org-use-speed-commands-for-headings-and-lists)
+
+(add-to-list 'org-speed-commands-user '("x" org-todo "DONE"))
+(add-to-list 'org-speed-commands-user '("y" org-todo-yesterday "DONE"))
+(add-to-list 'org-speed-commands-user '("!" my/org-clock-in-and-track))
+(add-to-list 'org-speed-commands-user '("s" call-interactively 'org-schedule))
+(add-to-list 'org-speed-commands-user '("d" my/org-move-line-to-destination))
+(add-to-list 'org-speed-commands-user '("i" call-interactively 'org-clock-in))
+(add-to-list 'org-speed-commands-user '("P" call-interactively 'org2blog/wp-post-subtree))
+(add-to-list 'org-speed-commands-user '("o" call-interactively 'org-clock-out))
+(add-to-list 'org-speed-commands-user '("$" call-interactively 'org-archive-subtree))
+;; (bind-key "!" 'my/org-clock-in-and-track org-agenda-mode-map)
+(setq org-agenda-files 
+      (list "~/Dropbox/MyOrg/mygtd.org" "~/Dropbox/MyOrg/business.org" "~/Dropbox/MyOrg/personal.org"))
+;;; TODO figure out the task timing/estimation
+
+(defvar org-journal-dir "/home/sayth/Dropbox/MyOrg/"  
+  "Path to OrgMode journal file.")  
+(defvar org-journal-date-format "%Y-%m-%d"  
+  "Date format string for journal headings.")  
+  
+(setq org-clock-persist 'history)
+(org-clock-persistence-insinuate)
+
+;; C-c C-x C-i clock-in
+;; C-c C-x C-o clock-out
+;; C-c C-x C-e modify-effort-estimate
+;; C-c C-x C-j clock-goto
+;; C-c C-x C-t clock-report
+
+(setq org-todo-keywords
+ '((sequence
+    "TODO(t)"  ; next action
+    "TOBLOG(b)"  ; next action
+    "STARTED(s)"
+    "WAITING(w@/!)"
+    "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
+
+(setq org-todo-keyword-faces
+      '(("TODO" . (:foreground "green" :weight bold))
+        ("DONE" . (:foreground "cyan" :weight bold))
+        ("WAITING" . (:foreground "red" :weight bold))
+        ("SOMEDAY" . (:foreground "gray" :weight bold))))
+
+(setq org-tag-alist '(("@work" . ?b)
+                      ("@home" . ?h)
+                      ("@writing" . ?w)
+                      ("@errands" . ?e)
+                      ("@drawing" . ?d)
+                      ("@coding" . ?c)
+                      ("@phone" . ?p)
+                      ("@reading" . ?r)
+                      ("@computer" . ?l)
+                      ("fuzzy" . ?0)
+                      ("highenergy" . ?1)))
+
+(add-to-list 'org-global-properties
+             '("Effort_ALL". "0:05 0:15 0:30 1:00 2:00 3:00 4:00"))
+
+;; (use-package org
+;;  :load-path "~/elisp/org-mode/lisp"
+;;  :init
+;;  (progn
+;;   (setq org-clock-idle-time nil)
+;;   (setq org-log-done 'time)
+;;   (setq org-clock-continuously nil)
+;;   (setq org-clock-persist t)
+;;   (setq org-clock-in-switch-to-state "STARTED")
+;;   (setq org-clock-in-resume nil)
+;;   (setq org-show-notification-handler 'message)
+;;   (setq org-clock-report-include-clocking-task t))
+;;  :config
+;;  (org-clock-persistence-insinuate))
+
+;; (add-hook 'org-clock-in-prepare-hook
+;;           'my/org-mode-ask-effort)
+
+(defun my/org-mode-ask-effort ()
+  "Ask for an effort estimate when clocking in."
+  (unless (org-entry-get (point) "Effort")
+    (let ((effort
+           (completing-read
+            "Effort: "
+            (org-entry-get-multivalued-property (point) "Effort"))))
+      (unless (equal effort "")
+        (org-set-property "Effort" effort)))))
+
+(setq org-enforce-todo-dependencies t)
+(setq org-track-ordered-property-with-tag t)
+(setq org-agenda-dim-blocked-tasks t)
+
+;;; helm-mini
+(require 'helm)
+(require 'helm-config)
+
+;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+(global-set-key (kbd "C-c h") 'helm-command-prefix)
+(global-unset-key (kbd "C-x c"))
+
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(when (executable-find "curl")
+  (setq helm-google-suggest-use-curl-p t))
+
+(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+      helm-ff-file-name-history-use-recentf t)
+
+(helm-mode 1)
+
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(global-set-key (kbd "C-x b") 'helm-mini)
+(setq helm-buffers-fuzzy-matching t
+      helm-recentf-fuzzy-match    t)
+
 (require 'smartrep)
 
 (electric-pair-mode 1)
@@ -65,42 +205,8 @@
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 
-;; GTD
-;;---------------------------------------
-(defun gtd ()
-   (interactive)
-   (find-file "/home/sayth/Dropbox/MyOrg/mygtd.org")
-   ) ;;; locate my gtd file quickly
-;;; C-c a h (to view outline of day)
-;; ("H" "Office and Home Lists"
-;;      ((agenda)
-;;           (tags-todo "OFFICE")
-;;           (tags-todo "HOME")
-;;           (tags-todo "COMPUTER")
-;;           (tags-todo "STUDY")
-;;           (tags-todo "READING")))
 
-;; ("D" "Daily Action List"
-;;       (
-;;            (agenda "" ((org-agenda-ndays 1)
-;;                        (org-agenda-sorting-strategy
-;;                         (quote ((agenda time-up priority-down tag-up) )))
-;;                        (org-deadline-warning-days 0)
-;;                        ))))
 
-;;; TODO figure out the task timing/estimation
-
-(defvar org-journal-dir "/home/sayth/Dropbox/MyOrg/"  
-  "Path to OrgMode journal file.")  
-(defvar org-journal-date-format "%Y-%m-%d"  
-  "Date format string for journal headings.")  
-  
-
-;; C-c C-x C-i clock-in
-;; C-c C-x C-o clock-out
-;; C-c C-x C-e modify-effort-estimate
-;; C-c C-x C-j clock-goto
-;; C-c C-x C-t clock-report
 
 (require 'pomodoro) 
     (pomodoro-add-to-mode-line)
@@ -118,10 +224,10 @@
 (elpy-use-ipython)
 (projectile-global-mode)
 (setq projectile-switch-project-action 'projectile-dired)
-(require 'flx-ido)
-(ido-mode 1)
-(ido-everywhere 1)
-(flx-ido-mode 1)
+;; (require 'flx-ido)
+;; (ido-mode 1)
+;; (ido-everywhere 1)
+;; (flx-ido-mode 1)
 (global-set-key (kbd "C-x g") 'magit-status)
 
 (add-hook 'elpy-mode-hook
