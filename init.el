@@ -18,7 +18,9 @@
     elpy
     js2-mode
     emmet-mode
+    company-web
     smartrep
+    smart-tab
     leuven-theme
     go-mode
     org-journal
@@ -28,10 +30,15 @@
     py-autopep8
     rainbow-delimiters
     web-mode
+    ac-html-bootstrap
     helm-projectile
+    ac-html-csswatcher
     flx-ido
     pomodoro
-    projectile))
+    projectile
+    yasnippet
+    company
+    ac-js2))
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
@@ -45,6 +52,57 @@
 (load-theme 'leuven t) ;; load material theme
 (global-linum-mode t) ;; enable line numbers globally
 ;;(add-to-list 'org-modules 'org-timer)
+
+
+;;Yasnippet
+(require 'yasnippet)
+(yas-global-mode 1)
+
+;; tern
+(add-to-list 'load-path "~/.emacs.d/")
+(autoload 'tern-mode "tern.el nil t")
+(add-hook 'js2-mode-hook (lambda () tern-mode t))
+
+;; Company
+(add-hook 'after-init-hook 'global-company-mode)
+(add-hook 'js2-mode-hook 'ac-js2-mode)
+(setq ac-js2-evaluate-calls t)
+(require 'company-web-html)                          ; load company mode html backend
+(setq company-tooltip-limit 20)                      ; bigger popup window
+(setq company-tooltip-align-annotations 't)          ; align annotations to the right tooltip border
+(setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
+(setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
+(global-set-key (kbd "C-c /") 'company-files)        ; Force complete file names on "C-c /" key
+(add-hook 'web-mode-hook (lambda ()
+                          (set (make-local-variable 'company-backends) '(company-web-html))
+                          (company-mode t)))
+
+(defun my-web-mode-hook ()
+  "Hook for `web-mode'."
+    (set (make-local-variable 'company-backends)
+         '(company-tern company-web-html company-yasnippet company-files)))
+
+(add-hook 'web-mode-hook 'my-web-mode-hook)
+(define-key web-mode-map (kbd "C-n") 'web-mode-tag-match)
+
+;; ;; Enable JavaScript completion between <script>...</script> etc.
+;; (defadvice company-tern (before web-mode-set-up-ac-sources activate)
+;;   "Set `tern-mode' based on current language before running company-tern."
+;;   (message "advice")
+;;   (if (equal major-mode 'web-mode)
+;;       (let ((web-mode-cur-language
+;;              (web-mode-language-at-pos)))
+;;         (if (or (string= web-mode-cur-language "javascript")
+;;                 (string= web-mode-cur-language "jsx")
+;;                 )
+;;             (unless tern-mode (tern-mode))
+;;           (if tern-mode (tern-mode -1))))))
+
+;; ;; manual autocomplete
+;; (define-key web-mode-map (kbd "M-SPC") 'company-complete)
+
+;; Goto Line
+(define-key global-map (kbd "M-g") 'goto-line)
 
 ;; GTD
 ;;---------------------------------------
@@ -196,16 +254,32 @@
                             (?\" . ?\")
                             (?\{ . ?\})
                             ) )
-;;; Emmet
-(require 'emmet-mode)
-(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-(add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+;; ;;; Emmet
+;; (require 'emmet-mode)
+;; (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+;; (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
 
 (add-hook 'python-mode-hook #'electric-spacing-mode)
 
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 
+(require 'smart-tab)
+(global-smart-tab-mode 1)
+
+;; (defun add-emmet-expand-to-smart-tab-completions ()
+;;   ;; Add an entry for current major mode in
+;;   ;; `smart-tab-completion-functions-alist' to use
+;;   ;; `emmet-expand-line'.
+;;   (add-to-list 'smart-tab-completion-functions-alist
+;;                (cons major-mode #'emmet-expand-line)))   
+
+;;; emmet
+(require 'emmet-mode)
+(add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+;;(add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions) 
+(add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+;;(add-hook 'css-mode-hook 'add-emmet-expand-to-smart-tab-completions)
 
 
 
@@ -282,11 +356,15 @@
 (setq web-mode-markup-indent-offset 2)
 (setq web-mode-css-indent-offset 2)
 (setq web-mode-code-indent-offset 2)
+(setq web-mode-enable-css-colorization t)
 
 (setq web-mode-enable-auto-pairing t)
 (setq web-mode-enable-auto-closing t)
 (setq web-mode-enable-current-element-highlight t)
 (setq web-mode-enable-current-column-highlight t)
+(add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
+
+(local-set-key (kbd "RET") 'newline-and-indent)
 
 (defun xah-cut-line-or-region ()
   "Cut current line, or text selection.
@@ -343,7 +421,7 @@ Version 2015-12-30"
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (electric-spacing org-gcal web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
+    (electric-spacing org-gcal emmet-mode web-mode rainbow-delimiters py-autopep8 pbcopy markdown-mode magit go-mode js2-mode elpy ein material-theme better-defaults))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
