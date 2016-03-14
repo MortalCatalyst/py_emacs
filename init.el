@@ -59,7 +59,7 @@
 (yas-global-mode 1)
 
 ;; tern
-(add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/tern/")
 (autoload 'tern-mode "tern.el nil t")
 (add-hook 'js2-mode-hook (lambda () tern-mode t))
 
