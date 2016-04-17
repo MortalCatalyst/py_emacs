@@ -175,15 +175,6 @@
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 
-;; (require 'smart-tab)
-;; (global-smart-tab-mode 1)
-
-;; (defun add-emmet-expand-to-smart-tab-completions ()
-;;   ;; Add an entry for current major mode in
-;;   ;; `smart-tab-completion-functions-alist' to use
-;;   ;; `emmet-expand-line'.
-;;   (add-to-list 'smart-tab-completion-functions-alist
-;;                (cons major-mode #'emmet-expand-line)))
 
 ;;; emmet
 (require 'emmet-mode)
@@ -237,7 +228,7 @@
 ;; - W391 - Remove trailing blank lines.
 ;; - W690 - Fix various deprecated code (via lib2to3).
 (require 'py-autopep8)
-(setq py-autopep8-options '("--ignore=E501,W293,W391,W690"))
+(setq py-autopep8-options '("--ignore=E501,W293,W391,W690,C0103"))
 (add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
 
 ;; enable newline-and-indent on return
