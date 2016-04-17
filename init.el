@@ -16,15 +16,14 @@
   '(better-defaults
     ein
     elpy
+    jedi
     js2-mode
     emmet-mode
     company-web
-    smartrep
-    smart-tab
     leuven-theme
-    go-mode
     org-journal
     magit
+    smartscan
     markdown-mode
     pbcopy
     py-autopep8
@@ -34,11 +33,19 @@
     helm-projectile
     ac-html-csswatcher
     flx-ido
-    pomodoro
     projectile
+    tab-jump-out
     yasnippet
     company
-    ac-js2))
+    ac-js2
+    py-autopep8
+    ))
+
+;; removed packages
+;;     smartrep
+;;     smart-tab
+;;     go-mode
+;;     pomodoro
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
@@ -49,10 +56,22 @@
 ;; --------------------------------------
 
 (setq inhibit-startup-message t) ;; hide the startup message
-(load-theme 'leuven t) ;; load material theme
+(load-theme 'solarized-dark t) ;; load material theme
 (global-linum-mode t) ;; enable line numbers globally
 ;;(add-to-list 'org-modules 'org-timer)
 
+;; web-mode
+(setq web-mode-enable-auto-pairing t)
+(setq web-mode-enable-css-colorization t)
+
+(add-hook 'python-mode-hook 'jedi:setup)
+(setq jedi:complete-on-dot t)
+
+(smartscan-mode 1)
+(setq yas-fallback-behavior '(apply tab-jump-out 1))
+
+(require 'py-autopep8)
+(add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
 
 ;;Yasnippet
 (require 'yasnippet)
@@ -63,11 +82,16 @@
 (autoload 'tern-mode "tern.el nil t")
 (add-hook 'js2-mode-hook (lambda () tern-mode t))
 
+(require 'company)                                   ; load company mode
+(require 'company-web-html)                          ; load company mode html backend
+;; and/or
+(require 'company-web-jade)                          ; load company mode jade backend
+(require 'company-web-slim)                          ; load company mode slim backend
 ;; Company
 (add-hook 'after-init-hook 'global-company-mode)
 (add-hook 'js2-mode-hook 'ac-js2-mode)
 (setq ac-js2-evaluate-calls t)
-(require 'company-web-html)                          ; load company mode html backend
+;;(require 'company-web-html)                          ; load company mode html backend
 (setq company-tooltip-limit 20)                      ; bigger popup window
 (setq company-tooltip-align-annotations 't)          ; align annotations to the right tooltip border
 (setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
@@ -77,153 +101,39 @@
                           (set (make-local-variable 'company-backends) '(company-web-html))
                           (company-mode t)))
 
+(add-to-list 'company-backends 'company-web-html)
+(add-to-list 'company-backends 'company-web-jade)
+(add-to-list 'company-backends 'company-web-slim)
+
 (defun my-web-mode-hook ()
   "Hook for `web-mode'."
     (set (make-local-variable 'company-backends)
          '(company-tern company-web-html company-yasnippet company-files)))
 
 (add-hook 'web-mode-hook 'my-web-mode-hook)
-;;(define-key web-mode-map (kbd "C-n") 'web-mode-tag-match)
 
-;; ;; Enable JavaScript completion between <script>...</script> etc.
-;; (defadvice company-tern (before web-mode-set-up-ac-sources activate)
-;;   "Set `tern-mode' based on current language before running company-tern."
-;;   (message "advice")
-;;   (if (equal major-mode 'web-mode)
-;;       (let ((web-mode-cur-language
-;;              (web-mode-language-at-pos)))
-;;         (if (or (string= web-mode-cur-language "javascript")
-;;                 (string= web-mode-cur-language "jsx")
-;;                 )
-;;             (unless tern-mode (tern-mode))
-;;           (if tern-mode (tern-mode -1))))))
-
-;; ;; manual autocomplete
-;; (define-key web-mode-map (kbd "M-SPC") 'company-complete)
 
 ;; Goto Line
 (define-key global-map (kbd "M-g") 'goto-line)
 
-;; GTD
-;;---------------------------------------
 
-(setq org-clock-persist 'history)
-    (org-clock-persistence-insinuate)
-
-(add-hook 'message-mode-hook 'turn-on-orgtbl)
-(require 'org-journal)
-(setq org-log-done 'time)
-;; (eval-after-load 'org-agenda
-;;   '(bind-key "i" 'org-agenda-clock-in org-agenda-mode-map))
-
-(setq org-use-effective-time t)
-
-(defun my/org-use-speed-commands-for-headings-and-lists ()
-  "Activate speed commands on list items too."
-  (or (and (looking-at org-outline-regexp) (looking-back "^\**"))
-      (save-excursion (and (looking-at (org-item-re)) (looking-back "^[ \t]*")))))
-(setq org-use-speed-commands 'my/org-use-speed-commands-for-headings-and-lists)
-
-(add-to-list 'org-speed-commands-user '("x" org-todo "DONE"))
-(add-to-list 'org-speed-commands-user '("y" org-todo-yesterday "DONE"))
-(add-to-list 'org-speed-commands-user '("!" my/org-clock-in-and-track))
-(add-to-list 'org-speed-commands-user '("s" call-interactively 'org-schedule))
-(add-to-list 'org-speed-commands-user '("d" my/org-move-line-to-destination))
-(add-to-list 'org-speed-commands-user '("i" call-interactively 'org-clock-in))
-(add-to-list 'org-speed-commands-user '("P" call-interactively 'org2blog/wp-post-subtree))
-(add-to-list 'org-speed-commands-user '("o" call-interactively 'org-clock-out))
-(add-to-list 'org-speed-commands-user '("$" call-interactively 'org-archive-subtree))
-;; (bind-key "!" 'my/org-clock-in-and-track org-agenda-mode-map)
-(setq org-agenda-files 
-      (list "~/Dropbox/MyOrg/mygtd.org" "~/Dropbox/MyOrg/business.org" "~/Dropbox/MyOrg/personal.org"))
-;;; TODO figure out the task timing/estimation
-
-(defvar org-journal-dir "/home/sayth/Dropbox/MyOrg/"  
-  "Path to OrgMode journal file.")  
-(defvar org-journal-date-format "%Y-%m-%d"  
-  "Date format string for journal headings.")  
-  
-(setq org-clock-persist 'history)
-(org-clock-persistence-insinuate)
-
-;; C-c C-x C-i clock-in
-;; C-c C-x C-o clock-out
-;; C-c C-x C-e modify-effort-estimate
-;; C-c C-x C-j clock-goto
-;; C-c C-x C-t clock-report
-
-(setq org-todo-keywords
- '((sequence
-    "TODO(t)"  ; next action
-    "TOBLOG(b)"  ; next action
-    "STARTED(s)"
-    "WAITING(w@/!)"
-    "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
-
-(setq org-todo-keyword-faces
-      '(("TODO" . (:foreground "green" :weight bold))
-        ("DONE" . (:foreground "cyan" :weight bold))
-        ("WAITING" . (:foreground "red" :weight bold))
-        ("SOMEDAY" . (:foreground "gray" :weight bold))))
-
-(setq org-tag-alist '(("@work" . ?b)
-                      ("@home" . ?h)
-                      ("@writing" . ?w)
-                      ("@errands" . ?e)
-                      ("@drawing" . ?d)
-                      ("@coding" . ?c)
-                      ("@phone" . ?p)
-                      ("@reading" . ?r)
-                      ("@computer" . ?l)
-                      ("fuzzy" . ?0)
-                      ("highenergy" . ?1)))
-
-(add-to-list 'org-global-properties
-             '("Effort_ALL". "0:05 0:15 0:30 1:00 2:00 3:00 4:00"))
-
-;; (use-package org
-;;  :load-path "~/elisp/org-mode/lisp"
-;;  :init
-;;  (progn
-;;   (setq org-clock-idle-time nil)
-;;   (setq org-log-done 'time)
-;;   (setq org-clock-continuously nil)
-;;   (setq org-clock-persist t)
-;;   (setq org-clock-in-switch-to-state "STARTED")
-;;   (setq org-clock-in-resume nil)
-;;   (setq org-show-notification-handler 'message)
-;;   (setq org-clock-report-include-clocking-task t))
-;;  :config
-;;  (org-clock-persistence-insinuate))
-
-;; (add-hook 'org-clock-in-prepare-hook
-;;           'my/org-mode-ask-effort)
-
-(defun my/org-mode-ask-effort ()
-  "Ask for an effort estimate when clocking in."
-  (unless (org-entry-get (point) "Effort")
-    (let ((effort
-           (completing-read
-            "Effort: "
-            (org-entry-get-multivalued-property (point) "Effort"))))
-      (unless (equal effort "")
-        (org-set-property "Effort" effort)))))
-
-(setq org-enforce-todo-dependencies t)
-(setq org-track-ordered-property-with-tag t)
-(setq org-agenda-dim-blocked-tasks t)
 
 ;;; helm
 (require 'helm)
 (require 'helm-config)
+(helm-autoresize-mode 1)
 
 ;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
 ;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
 ;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
 (global-set-key (kbd "C-c h") 'helm-command-prefix)
 (global-unset-key (kbd "C-x c"))
-(global-set-key (kbd "C-x C-f")
-                
+
+(global-set-key (kbd "M-x")                          'undefined)
+(global-set-key (kbd "M-x")                          'helm-M-x)
+(global-set-key (kbd "C-x r b")                      'helm-filtered-bookmarks)
+(global-set-key (kbd "C-x C-f")                      'helm-find-files)
+
 (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
 (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
 (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
@@ -248,7 +158,7 @@
 (setq helm-buffers-fuzzy-matching t
       helm-recentf-fuzzy-match    t)
 
-(require 'smartrep)
+;; (require 'smartrep)
 
 (electric-pair-mode 1)
 (setq electric-pair-pairs '(
@@ -260,32 +170,29 @@
 ;; (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
 ;; (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
 
-(add-hook 'python-mode-hook #'electric-spacing-mode)
+;; (add-hook 'python-mode-hook #'electric-spacing-mode)
 
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 
-(require 'smart-tab)
-(global-smart-tab-mode 1)
+;; (require 'smart-tab)
+;; (global-smart-tab-mode 1)
 
 ;; (defun add-emmet-expand-to-smart-tab-completions ()
 ;;   ;; Add an entry for current major mode in
 ;;   ;; `smart-tab-completion-functions-alist' to use
 ;;   ;; `emmet-expand-line'.
 ;;   (add-to-list 'smart-tab-completion-functions-alist
-;;                (cons major-mode #'emmet-expand-line)))   
+;;                (cons major-mode #'emmet-expand-line)))
 
 ;;; emmet
 (require 'emmet-mode)
 (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-;;(add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions) 
+;;(add-hook 'sgml-mode-hook 'add-emmet-expand-to-smart-tab-completions)
 (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
 ;;(add-hook 'css-mode-hook 'add-emmet-expand-to-smart-tab-completions)
 
 
-
-(require 'pomodoro) 
-    (pomodoro-add-to-mode-line)
 
 ;;switch panes
 ;; use Shift+arrow_keys to move cursor around split panes
@@ -383,12 +290,12 @@ Version 2015-06-10"
              (kill-region (line-beginning-position) (line-beginning-position 2))))))
 
 (defun xah-copy-line-or-region ()
-  "Copy current line, or text selection.
-When called repeatedly, append copy subsequent lines.
-When `universal-argument' is called first, copy whole buffer (respects `narrow-to-region').
+;;  "Copy current line, or text selection.
+;; When called repeatedly, append copy subsequent lines.
+;; When `universal-argument' is called first, copy whole buffer (respects `narrow-to-region').
 
-URL `http://ergoemacs.org/emacs/emacs_copy_cut_current_line.html'
-Version 2015-12-30"
+;; URL `http://ergoemacs.org/emacs/emacs_copy_cut_current_line.html'
+;; Version 2015-12-30"
   (interactive)
   (let (ξp1 ξp2)
     (if current-prefix-arg
@@ -413,6 +320,140 @@ Version 2015-12-30"
 (global-set-key (kbd "<f2>") 'xah-cut-line-or-region) ; cut
 (global-set-key (kbd "<f3>") 'xah-copy-line-or-region) ; copy
 (global-set-key (kbd "<f4>") 'yank) ; paste
+
+;; Removed config
+
+;; GTD
+;;---------------------------------------
+
+;; (setq org-clock-persist 'history)
+;;    (org-clock-persistence-insinuate)
+
+;; (add-hook 'message-mode-hook 'turn-on-orgtbl)
+;; (require 'org-journal)
+;; (setq org-log-done 'time)
+;; (eval-after-load 'org-agenda
+;;   '(bind-key "i" 'org-agenda-clock-in org-agenda-mode-map))
+
+;; (setq org-use-effective-time t)
+
+;; (defun my/org-use-speed-commands-for-headings-and-lists ()
+;;   "Activate speed commands on list items too."
+;;   (or (and (looking-at org-outline-regexp) (looking-back "^\**"))
+;;       (save-excursion (and (looking-at (org-item-re)) (looking-back "^[ \t]*")))))
+;; (setq org-use-speed-commands 'my/org-use-speed-commands-for-headings-and-lists)
+;;
+;; (add-to-list 'org-speed-commands-user '("x" org-todo "DONE"))
+;; (add-to-list 'org-speed-commands-user '("y" org-todo-yesterday "DONE"))
+;; (add-to-list 'org-speed-commands-user '("!" my/org-clock-in-and-track))
+;; (add-to-list 'org-speed-commands-user '("s" call-interactively 'org-schedule))
+;; (add-to-list 'org-speed-commands-user '("d" my/org-move-line-to-destination))
+;; (add-to-list 'org-speed-commands-user '("i" call-interactively 'org-clock-in))
+;; (add-to-list 'org-speed-commands-user '("P" call-interactively 'org2blog/wp-post-subtree))
+;; (add-to-list 'org-speed-commands-user '("o" call-interactively 'org-clock-out))
+;; (add-to-list 'org-speed-commands-user '("$" call-interactively 'org-archive-subtree))
+;; (bind-key "!" 'my/org-clock-in-and-track org-agenda-mode-map)
+;; (setq org-agenda-files
+;;       (list "~/Dropbox/MyOrg/mygtd.org" "~/Dropbox/MyOrg/business.org" "~/Dropbox/MyOrg/personal.org"))
+;;; TODO figure out the task timing/estimation
+
+;; (defvar org-journal-dir "/home/sayth/Dropbox/MyOrg/"
+;;   "Path to OrgMode journal file.")
+;; (;; defvar org-journal-date-format "%Y-%m-%d"
+;;   "Date format string for journal headings.")
+;;
+;; (setq org-clock-persist 'history)
+;; (org-clock-persistence-insinuate)
+;;
+;; ;; C-c C-x C-i clock-in
+;; ;; C-c C-x C-o clock-out
+;; ;; C-c C-x C-e modify-effort-estimate
+;; C-c C-x C-j clock-goto
+;; ;; C-c C-x C-t clock-report
+;;
+;; (setq org-todo-keywords
+;;  '((sequence
+;;     "TODO(t)"  ; next action
+;;     "TOBLOG(b)"  ; next action
+;;     "STARTED(s)"
+;;     "WAITING(w@/!)"
+;;     "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")))
+;;
+;; (setq org-todo-keyword-faces
+;;       '(("TODO" . (:foreground "green" :weight bold))
+;;         ("DONE" . (:foreground "cyan" :weight bold))
+;;         ("WAITING" . (:foreground "red" :weight bold))
+;;         ("SOMEDAY" . (:foreground "gray" :weight bold))))
+
+;; (setq org-tag-alist '(("@work" . ?b)
+;;                       ("@home" . ?h)
+;;                       ("@writing" . ?w)
+;;                       ("@errands" . ?e)
+;;                       ("@drawing" . ?d)
+;;                       ("@coding" . ?c)
+;;                       ("@phone" . ?p)
+;;                       ("@reading" . ?r)
+;;                       ("@computer" . ?l)
+;;                       ("fuzzy" . ?0)
+;;                       ("highenergy" . ?1)))
+;;
+;; (add-to-list 'org-global-properties
+;;              '("Effort_ALL". "0:05 0:15 0:30 1:00 2:00 3:00 4:00"))
+;;
+;; ;; (use-package org
+;; ;;  :load-path "~/elisp/org-mode/lisp"
+;;  :init
+;;  (progn
+;;   (setq org-clock-idle-time nil)
+;;   (setq org-log-done 'time)
+;;   (setq org-clock-continuously nil)
+;;   (setq org-clock-persist t)
+;;   (setq org-clock-in-switch-to-state "STARTED")
+;;   (setq org-clock-in-resume nil)
+;;   (setq org-show-notification-handler 'message)
+;;   (setq org-clock-report-include-clocking-task t))
+;;  :config
+;;  (org-clock-persistence-insinuate))
+
+;; (add-hook 'org-clock-in-prepare-hook
+;;           'my/org-mode-ask-effort)
+
+;; (defun my/org-mode-ask-effort ()
+;;   "Ask for an effort estimate when clocking in."
+;;   (unless (org-entry-get (point) "Effort")
+;;     (let ((effort
+;;            (completing-read
+;;             "Effort: "
+;;             (org-entry-get-multivalued-property (point) "Effort"))))
+;;       (unless (equal effort "")
+;;         (org-set-property "Effort" effort)))))
+;;
+;; (setq org-enforce-todo-dependencies t)
+;; (setq org-track-ordered-property-with-tag t)
+;; (setq org-agenda-dim-blocked-tasks t)
+
+;;(define-key web-mode-map (kbd "C-n") 'web-mode-tag-match)
+
+;; ;; Enable JavaScript completion between <script>...</script> etc.
+;; (defadvice company-tern (before web-mode-set-up-ac-sources activate)
+;;   "Set `tern-mode' based on current language before running company-tern."
+;;   (message "advice")
+;;   (if (equal major-mode 'web-mode)
+;;       (let ((web-mode-cur-language
+;;              (web-mode-language-at-pos)))
+;;         (if (or (string= web-mode-cur-language "javascript")
+;;                 (string= web-mode-cur-language "jsx")
+;;                 )
+;;             (unless tern-mode (tern-mode))
+;;           (if tern-mode (tern-mode -1))))))
+
+;; ;; manual autocomplete
+;; (define-key web-mode-map (kbd "M-SPC") 'company-complete)
+
+;; (require 'pomodoro)
+;;    (pomodoro-add-to-mode-line)
+
+
 
 ;; init.el ends here
 (custom-set-variables
