@@ -20,7 +20,6 @@
     js2-mode
     emmet-mode
     company-web
-    leuven-theme
     org-journal
     magit
     smartscan
@@ -39,6 +38,8 @@
     company
     ac-js2
     py-autopep8
+    undo-tree
+    diff-hl
     ))
 
 ;; removed packages
@@ -46,6 +47,8 @@
 ;;     smart-tab
 ;;     go-mode
 ;;     pomodoro
+;;     leuven-theme
+
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
@@ -76,6 +79,14 @@
 ;;Yasnippet
 (require 'yasnippet)
 (yas-global-mode 1)
+
+;; undo-tree
+(require 'undo-tree)
+(global-undo-tree-mode 1)
+
+;; diff-h1
+(global-diff-hl-mode)
+(add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
 
 ;; tern
 (add-to-list 'load-path "~/.emacs.d/tern/")
