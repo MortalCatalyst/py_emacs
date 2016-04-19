@@ -116,6 +116,7 @@
 (add-to-list 'company-backends 'company-web-jade)
 (add-to-list 'company-backends 'company-web-slim)
 
+
 (defun my-web-mode-hook ()
   "Hook for `web-mode'."
     (set (make-local-variable 'company-backends)
@@ -176,12 +177,6 @@
                             (?\" . ?\")
                             (?\{ . ?\})
                             ) )
-;; ;;; Emmet
-;; (require 'emmet-mode)
-;; (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-;; (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
-
-;; (add-hook 'python-mode-hook #'electric-spacing-mode)
 
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
@@ -244,6 +239,17 @@
 
 ;; enable newline-and-indent on return
 (define-key global-map (kbd "RET") 'newline-and-indent)
+
+;; enable python to run with args http://stackoverflow.com/a/2906371/461887
+(defun python-send-buffer-with-my-args (args)
+  (interactive "sPython arguments: ")
+  (let ((source-buffer (current-buffer)))
+    (with-temp-buffer
+      (insert "import sys; sys.argv = '''" args "'''.split()\n")
+      (insert-buffer-substring source-buffer)
+      (python-send-buffer))))
+
+(global-set-key "\C-c\C-a" 'python-send-buffer-with-my-args)
 
 ;;; _javascript --- javascript configuration
 
