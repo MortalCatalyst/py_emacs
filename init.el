@@ -40,6 +40,7 @@
     py-autopep8
     undo-tree
     diff-hl
+    flycheck-mypy
     ))
 
 ;; removed packages
@@ -221,6 +222,7 @@
 ;; enable rainbow-delimiters
 (require 'rainbow-delimiters)
 (add-hook `python-mode-hook `rainbow-delimiters-mode)
+
 
 ;; use flycheck not flymake
 (when (require 'flycheck nil t)
